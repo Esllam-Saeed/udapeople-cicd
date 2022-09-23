@@ -305,13 +305,13 @@ jobs:
               # your code here
 #            fi
       notify_on_success:
-         docker:
-           - image: cimage/base:stable
-         steps:
-           - slack/notify:
-               event: pass
-               channel: udapeople-cicd
-               template: success_tagged_deployment_1     
+        docker:
+          - image: cimage/base:stable
+        steps:
+          - slack/notify:
+              event: pass
+              channel: udapeople-cicd
+              template: success_tagged_deployment_1     
 workflows:
   default:
     jobs:
