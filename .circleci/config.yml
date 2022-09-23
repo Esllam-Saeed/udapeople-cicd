@@ -5,7 +5,7 @@ orbs:
 
 
 commands:
-  notify_on_failure
+  notify_on_failure:
     steps:
       - slack/notify:
           event: fail
