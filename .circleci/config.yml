@@ -200,9 +200,22 @@ jobs:
 
 #      - destroy-environment:
 
-#  configure-infrastructure:
-#    docker:
-      # Docker image here that supports Ansible
+  configure-infrastructure:
+    docker:
+      - image: cimag/base:stable
+    steps:
+      - checkout
+      - install_ansible
+      - add_ssh_keys:
+           fingureprints: ["7e:88:62:10:99:51:23:b7:62:f0:a5:f1:7e:a7:20:29"]
+      - attach_workspace:
+          at: ~/
+      - run:
+           name: Configure server
+           command: |
+              cd .circleci/ansible
+              cat inventory.txt
+              ansible-playbook -i inventory.txt configure-server.yml
 #    steps:
       # Checkout code from git
       # Add ssh keys with fingerprint
@@ -357,8 +370,8 @@ workflows:
           filters:
             branches:
               only: [master]
-#      - configure-infrastructure:
-#          requires: [deploy-infrastructure]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
 #      - run-migrations:
 #          requires: [configure-infrastructure]
 #      - deploy-frontend:
