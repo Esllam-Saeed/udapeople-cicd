@@ -322,91 +322,91 @@ jobs:
             ansible-playbook -i inventory.txt deploy-backend.yml
       - destroy-environment
       - revert-migrations 
-  smoke-test:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - checkout
-      - install_awscli
-      - install_nodejs
-      - run:
-          name: Backend smoke test.
-          command: |
-            export BACKEND_IP=$(aws ec2 describe-instances \
-              --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
-            if curl "${API_URL}/api/status" | grep "ok"
-            then
-              exit 0
-            else
-              exit 1
-            fi
-      - run:
-          name: Frontend smoke test.
-          command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"            
-            echo ${URL} 
-            if curl -s ${URL} | grep "Welcome"
-            then
-                
-              exit 0
-            else
-              exit 1
-            fi
-      - destroy-environment
-      - revert-migrations
+#  smoke-test:
+#    docker:
+#      - image: cimg/base:stable
+#    steps:
+#      - checkout
+#      - install_awscli
+#      - install_nodejs
+#      - run:
+#          name: Backend smoke test.
+#          command: |
+#            export BACKEND_IP=$(aws ec2 describe-instances \
+#              --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+#              --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+#            export API_URL="http://${BACKEND_IP}:3030"
+#            echo "${API_URL}"
+#            if curl "${API_URL}/api/status" | grep "ok"
+#            then
+#              exit 0
+#            else
+#              exit 1
+#           fi
+#      - run:
+#          name: Frontend smoke test.
+#          command: |
+#            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"            
+#            echo ${URL} 
+#            if curl -s ${URL} | grep "Welcome"
+#            then
+#                
+#              exit 0
+#            else
+#              exit 1
+#            fi
+#      - destroy-environment
+#      - revert-migrations
 
-  cloudfront-update:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - checkout
-      - install_awscli
-      - install_nodejs
-      - run:
-          name: Install dependencies
-          command: |
-            export OldWorkflowID=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-              --no-paginate --output text)
-            echo "OldWorkflowID: ${OldWorkflowID}"
-            curl https://kvdb.io/Rn2bVdevNRPzaN8MFzCTvx/old_workflowid -d "${OldWorkflowID}"
+#  cloudfront-update:
+#    docker:
+#      - image: cimg/base:stable
+#    steps:
+#      - checkout
+#      - install_awscli
+#      - install_nodejs
+#      - run:
+#          name: Install dependencies
+#          command: |
+#            export OldWorkflowID=$(aws cloudformation \
+#              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+#              --no-paginate --output text)
+#            echo "OldWorkflowID: ${OldWorkflowID}"
+#            curl https://kvdb.io/Rn2bVdevNRPzaN8MFzCTvx/old_workflowid -d "${OldWorkflowID}"
       
-      - run:
-          name: Update cloudfront distribution
-          command: |
-            aws cloudformation deploy \
-            --template-file .circleci/files/cloudfront.yml \
-            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
-            --stack-name InitialStack
-      - destroy-environment
-      - revert-migrations
-  cleanup:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - checkout
-      - install_awscli
-      - install_nodejs
-      - run:
-          name: Remove old stacks and files
-          command: |
-            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-            --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            echo Stack names: "${STACKS[@]}"
-            export OldWorkflowID=$(curl --insecure https://kvdb.io/Rn2bVdevNRPzaN8MFzCTvx/old_workflowid)
-            echo Old Workflow ID: $OldWorkflowID  
-            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-            then
-              echo "-------------Cleaning up old resources-------------"
-              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
-              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
-              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
-            else
-              echo "-------------Nothing to Cleanup-------------"
-            fi
+#      - run:
+#          name: Update cloudfront distribution
+#          command: |
+#            aws cloudformation deploy \
+#            --template-file .circleci/files/cloudfront.yml \
+#            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+#            --stack-name InitialStack
+#      - destroy-environment
+#      - revert-migrations
+#  cleanup:
+#    docker:
+#      - image: cimg/base:stable
+#    steps:
+#      - checkout
+#      - install_awscli
+#      - install_nodejs
+#      - run:
+#          name: Remove old stacks and files
+#          command: |
+#            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+#            --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+#            echo Stack names: "${STACKS[@]}"
+#            export OldWorkflowID=$(curl --insecure https://kvdb.io/Rn2bVdevNRPzaN8MFzCTvx/old_workflowid)
+#            echo Old Workflow ID: $OldWorkflowID  
+#            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+#            then
+#              echo "-------------Cleaning up old resources-------------"
+#              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+#              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+#              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+#            else
+#              echo "-------------Nothing to Cleanup-------------"
+#            fi
               
 workflows:
   default:
@@ -434,9 +434,9 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-          requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
+#      - smoke-test:
+#          requires: [deploy-backend, deploy-frontend]
+#      - cloudfront-update:
+#          requires: [smoke-test]
+#      - cleanup:
+#          requires: [cloudfront-update]
